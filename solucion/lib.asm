@@ -6,7 +6,6 @@ section .text
 global floatCmp
 global floatClone
 global floatDelete
-global floatPrint
 
 global strClone
 global strLen
@@ -29,8 +28,6 @@ ret
 floatClone:
 ret
 floatDelete:
-ret
-floatPrint:
 ret
 
 ;*** String ***

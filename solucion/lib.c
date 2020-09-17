@@ -1,10 +1,14 @@
 #include "lib.h"
 
-int dummy(){ return 0; }
+int32_t dummyCmp(void* a, void* b){ return 0; }
+void* dummyClone(void* a){ return NULL; }
+void dummyDelete(void* a){}
+void dummyPrint(void* a, FILE* f){}
+
 
 funcCmp_t* getCompareFunction(type_t t) {
     switch (t) {
-        case TypeNone:     return (funcCmp_t*)&dummy; break;
+        case TypeNone:     return (funcCmp_t*)&dummyCmp; break;
         case TypeInt:      return (funcCmp_t*)&intCmp; break;
         case TypeFloat:    return (funcCmp_t*)&floatCmp; break;
         case TypeString:   return (funcCmp_t*)&strCmp; break;
@@ -16,7 +20,7 @@ funcCmp_t* getCompareFunction(type_t t) {
 
 funcClone_t* getCloneFunction(type_t t) {
     switch (t) {
-        case TypeNone:     return (funcClone_t*)&dummy; break;
+        case TypeNone:     return (funcClone_t*)&dummyClone; break;
         case TypeInt:      return (funcClone_t*)&intClone; break;
         case TypeFloat:    return (funcClone_t*)&floatClone; break;
         case TypeString:   return (funcClone_t*)&strClone; break;
@@ -28,7 +32,7 @@ funcClone_t* getCloneFunction(type_t t) {
 
 funcDelete_t* getDeleteFunction(type_t t) {
     switch (t) {
-        case TypeNone:     return (funcDelete_t*)&dummy; break;
+        case TypeNone:     return (funcDelete_t*)&dummyDelete; break;
         case TypeInt:      return (funcDelete_t*)&intDelete; break;
         case TypeFloat:    return (funcDelete_t*)&floatDelete; break;
         case TypeString:   return (funcDelete_t*)&strDelete; break;
@@ -40,7 +44,7 @@ funcDelete_t* getDeleteFunction(type_t t) {
 
 funcPrint_t* getPrintFunction(type_t t) {
     switch (t) {
-        case TypeNone:     return (funcPrint_t*)&dummy; break;
+        case TypeNone:     return (funcPrint_t*)&dummyPrint; break;
         case TypeInt:      return (funcPrint_t*)&intPrint; break;
         case TypeFloat:    return (funcPrint_t*)&floatPrint; break;
         case TypeString:   return (funcPrint_t*)&strPrint; break;
@@ -65,10 +69,14 @@ int32_t* intClone(int32_t* a){
 void intDelete(int32_t* a){
     free(a);
 }
-void intPrint(int32_t* a, FILE *pFile){
+void intPrint(int32_t* a, FILE* pFile){
     fprintf(pFile, "%i", *a);
 }
 
+/** Float **/
+void floatPrint(float* a, FILE* pFile){
+    fprintf(pFile, "%f", *a);
+}
 /** Document **/
 
 document_t* docNew(int32_t size, ... ){
@@ -106,7 +114,7 @@ int32_t docCmp(document_t* a, document_t* b){
     // Are equal
     return 0;
 }
-void docPrint(document_t* a, FILE *pFile){
+void docPrint(document_t* a, FILE* pFile){
     fprintf(pFile, "{");
     for(int i=0; i < a->count-1 ; i++ ) {
         funcPrint_t* fp = getPrintFunction(a->values[i].type);
@@ -164,7 +172,7 @@ void listDelete(list_t* l){
     }
     free(l);
 }
-void listPrint(list_t* l, FILE *pFile) {
+void listPrint(list_t* l, FILE* pFile) {
     funcPrint_t* fp = getPrintFunction(l->type);
     fprintf(pFile, "[");
     listElem_t* current = l->first;

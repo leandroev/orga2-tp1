@@ -1,6 +1,5 @@
 CC=c99
-CFLAGS=-Wall -Wextra -pedantic -O0 -g -lm -Wno-unused-variable -Wno-unused-parameter -no-pie
-CFLAGS=-g -lm -no-pie
+CFLAGS=-Wall -Wextra -pedantic -Wno-unused-variable -Wno-unused-parameter -Wfloat-conversion -O0 -ggdb -no-pie -lm
 NASM=nasm
 NASMFLAGS=-f elf64 -g -F DWARF 
 
