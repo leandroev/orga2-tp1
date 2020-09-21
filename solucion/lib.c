@@ -148,8 +148,34 @@ void listAddLast(list_t* l, void* data){
         l->last->next = n;
     l->last = n;
 }
+
 void listRemove(list_t* l, void* data){
+    if(l->size != 0){// si esta vacia no hago nada
+        funcCmp_t *fc = getCompareFunction(l->type); // obtengo el putero a funcion comparacion del tipo
+        funcDelete_t *fd = getDeleteFunction(l->type); // obtengo el putero a funcion borrar del tipo
+        listElem_t *elemActual = l->first;
+        uint32_t lSize = l->size;
+        for (uint32_t i = 0; i < l->size; ++i){ // recorro la lista
+            if(fc(elemActual->data, data) == 0){ // hay coincidencia??
+                if(elemActual->prev != NULL){
+                    elemActual->prev->next = elemActual->next;  // hay elemento previo
+                }else{
+                    l->first = elemActual->next;    // no hay elemento previo => actualizo l->first
+                }
+                if(elemActual->next != NULL){
+                    elemActual->next->prev = elemActual->prev;  // hay elemento siguiente
+                }else{
+                    l->last = elemActual->prev;     // no hay elemeto siguiente => actualizo l->last
+                }
+                fd(elemActual->data);   // borro el dato
+                free(elemActual);       // borro el elemento de lista
+                lSize--;
+            }
+        }
+        l->size = lSize;    // actualizo la longitud de la lista
+    }
 }
+
 list_t* listClone(list_t* l) {
     funcClone_t* fn = getCloneFunction(l->type);
     list_t* lclone = listNew(l->type);
@@ -203,11 +229,46 @@ tree_t* treeNew(type_t typeKey, type_t typeData, int duplicate) {
     t->duplicate = duplicate;
     return t;
 }
+
 list_t* treeGet(tree_t* tree, void* key) {
+    if(tree->size > 0){
+        funcCmp_t *fc = getCompareFunction(tree->typeKey); // obtengo puntero a funcion para comparar claves
+        treeNode_t *actual = tree->first;
+        do{
+            int32_t resCmp = fc(key, actual->key); // comparo claves
+            if(resCmp == 0){        // a = b => encontre nodo
+                return listClone(actual->values);   // retorno el puntero a la lista clon
+            }
+            else if(resCmp == 1){   // a < b => voy por rama izquierda
+                actual = actual->left;
+            }
+            else if(resCmp == -1){  // a > b => voy por rama derecha
+                actual = actual->right;
+            }
+        }while(actual != NULL);
+    }
     return 0;
 }
+
 void treeRemove(tree_t* tree, void* key, void* data) {
+    if(tree->size > 0){
+        funcCmp_t *fc = getCompareFunction(tree->typeKey);  // obtengo puntero a funcion para comparar claves
+        treeNode_t *actual = tree->first;
+        do{
+            int32_t resCmp = fc(key, actual->key);  // comparo claves
+            if(resCmp == 0){        // a = b => encontre nodo
+                listRemove(actual->values, data);   // borro el dato de la lista
+            }
+            else if(resCmp == 1){   // a < b => voy por rama izquierda
+                actual = actual->left;
+            }
+            else if(resCmp == -1){  // a > b => voy por rama derecha
+                actual = actual->right;
+            }
+        }while(actual != NULL);
+    }
 }
+
 void treeDeleteAux(tree_t* tree, treeNode_t** node) {
     treeNode_t* nt = *node;
     if( nt != 0 ) {
