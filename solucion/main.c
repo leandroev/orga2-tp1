@@ -9,7 +9,7 @@
 
 void test_list(FILE *pfile){
     
-    list_t* l= listNew(string);
+    list_t* l= listNew(TypeString);
    	
    	listAdd(l, "a");
    	listAdd(l, "b");
@@ -22,7 +22,7 @@ void test_list(FILE *pfile){
    	listAdd(l, "i");
    	listAdd(l, "j");
    	
-   	list_t* lf= listNew(float);
+   	list_t* lf= listNew(TypeFloat);
    	
    	listAdd(lf, 1);
    	listAdd(lf, 3.56);
@@ -48,16 +48,42 @@ void test_list(FILE *pfile){
 }
 
 void test_tree(FILE *pfile){
+	
+	tree_t* arbol = treeNew(TypeInt, TypeString, 1);
+	
+	treeInsert(arbol, 24, "papanatas");
+	treeInsert(arbol, 34, "rima");
+	treeInsert(arbol, 24, "buscabullas");
+	treeInsert(arbol, 11, "musica");
+	treeInsert(arbol, 31, "Pikachu");
+	treeInsert(arbol, 11, "Bulbasaur");
+	treeInsert(arbol, -2, "Charmander");
+
+	tree_t* arbol_2 = treeNew(TypeInt, TypeString, 1);
+
+	treeInsert(arbol_2, -2, "Charmander");
+	treeInsert(arbol_2, 11, "Bulbasaur");
+	treeInsert(arbol_2, 31, "Pikachu");
+	treeInsert(arbol_2, 11, "musica");
+	treeInsert(arbol_2, 24, "buscabullas");
+	treeInsert(arbol_2, 34, "rima");
+	treeInsert(arbol_2, 24, "papanatas");
+
+	treePrint(arbol, pfile);
+	treePrint(arbol_2, pfile);
+
+	treeDelete(arbol);
+	treeDelete(arbol_2);
     
 }
 
 void test_document(FILE *pfile){
-    docNew(0);
-    docClone();
-    docPrint();
-    docPrint();
-    docDelete();
-    docDelete();
+    document_t* doc = docNew(6, TypeInt, 83, TypeInt, 125, TypeFloat, 12.5, TypeFloat, 1.34, TypeString, "Hola", TypeString, "Chau");
+    document_t* doc_c= docClone(doc);
+    docPrint(doc, pfile);
+    docPrint(doc_c, pfile);
+    docDelete(doc);
+    docDelete(doc_c);
 
 }
 
