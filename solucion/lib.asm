@@ -4,6 +4,7 @@ extern free
 section .data
 	uno: dd 1 
 	menosUno: dd -1
+	null: db 'NULL'
 
 section .text
 
@@ -145,6 +146,13 @@ strDelete:
 ret
 
 strPrint:
+	
+	cmp byte [rdi], 0
+	jne .termina
+    mov rdi, null
+    
+	.termina:
+	call printf
 ret
 
 ;*** Document ***
