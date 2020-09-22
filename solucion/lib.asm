@@ -2,6 +2,7 @@ extern malloc
 extern free 
 
 section .data
+null: db 'NULL'
 
 section .text
 
@@ -120,6 +121,13 @@ strDelete:
 ret
 
 strPrint:
+	
+	cmp byte [rdi], 0
+	jne .termina
+    mov rdi, null
+    
+	.termina:
+	call printf
 ret
 
 ;*** Document ***
