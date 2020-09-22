@@ -282,4 +282,22 @@ void test_2(char* filename){
         RUN(filename,treePrint(t,pfile); fprintf(pfile,"\n"););
     }
     treeDelete(t);
+
+    t = treeNew(TypeString, TypeDocument, 1);
+    for(int i=0; i<100; i++) {
+        for(int i=0; i<10; i++) {
+            k = randomString(3);
+            v = randomDocument();
+            RUN(filename,strPrint(k,pfile); fprintf(pfile,"\n"););
+            RUN(filename,docPrint(v,pfile); fprintf(pfile,"\n"););
+            treeInsert(t, k, v);
+            if ( rand()%100 > 50 ) { treeRemove(t, k, v); }
+            strDelete(k);
+            docDelete(v);
+        }
+        RUN(filename,treePrint(t,pfile); fprintf(pfile,"\n"););
+    }
+    treeDelete(t);
+
+
 }

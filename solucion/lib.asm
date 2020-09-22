@@ -48,7 +48,7 @@ floatCmp:		; eax <- int32_t  (rdi <- *a, rsi <- *b)
 	.fin:
 	ret
 				; float* floatClone(float* a);
-floatClone:		; rax <- *float    (rdi <- *a)
+floatClone:		; rax <- float*    (rdi <- *a)
 	push rbp		; pila alieada
 	mov rbp, rsp
 	push rdi		; guardo rdi en la pila | pila desalineada
@@ -60,25 +60,65 @@ floatClone:		; rax <- *float    (rdi <- *a)
 	; recupero el puntero a float
 	add rsp,8 		
 	pop rdi			; rdi <- float *a
-	mov rsi, [rdi]	; obtengo el dato float apuntado
-	mov [rax], rsi	; lo copio en memoria
+	mov esi, [rdi]	; obtengo el dato float apuntado
+	mov [rax], esi	; lo copio en memoria
+	pop rbp
+ret
+					; void floatDelete(float* a)
+floatDelete:		;				  rdi <- *a
+	push rbp
+	mov rbp, rsp
+	call free
 	pop rbp
 ret
 
-floatDelete:
-	jmp free
-ret
-
 ;*** String ***
+				; char* strClone(char* a)
+strClone:		; rax <- char*	rdi <- *a
+	push rbp		; pila alineada
+	mov rbp, rsp
+	
+	push rbx
+	sub rsp, 8		; pila alineada
+	
+	mov rbx, rdi	; rbx <- *a
+	call strLen 	; rax <- largo del String
+	
+	inc eax			; tengo que agregar un '0' al final
+	mov edi, eax
+	call malloc		; rax <- char* clonString
+	mov rdi, 0
 
-strClone:
+	.recorrido:
+		mov r8b, [rbx]
+		mov [rax+rdi], r8b
+		inc rbx
+		inc rdi
+		cmp r8b, 0
+		jne .recorrido
+	.fin:
+	add rsp, 8
+	pop rbx
+	pop rbp
 ret
-strLen:
+			; uint32_t strLen(char* a)
+strLen:		; eax <- uint32_t rdi <- *a
+	mov eax, 0
+	.recorrido:
+		cmp byte [rdi], 0
+		je .fin
+		inc eax
+		jmp .recorrido
+	.fin:
 ret
-strCmp:
+			; int32_t strCmp(char* a, char* b)
+strCmp:		; eax <- int32_t rdi <- *a, rsi <- *b
+	
 ret
+
 strDelete:
 ret
+
 strPrint:
 ret
 
