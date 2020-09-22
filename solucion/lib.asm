@@ -2,7 +2,7 @@ extern malloc
 extern free 
 
 section .data
-null: db 'NULL'
+null: db 'NULL', 0
 
 section .text
 
@@ -124,10 +124,10 @@ strPrint:
 	
 	cmp byte [rdi], 0
 	jne .termina
-    mov rdi, null
+    mov rdi, [null]
     
 	.termina:
-	call printf
+	call fprintf(rsi, [rdi])
 ret
 
 ;*** Document ***
