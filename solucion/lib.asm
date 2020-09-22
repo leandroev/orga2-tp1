@@ -2,6 +2,8 @@ extern malloc
 extern free 
 
 section .data
+	uno: dd 1 
+	menosUno: dd -1
 
 section .text
 
@@ -90,12 +92,12 @@ strClone:		; rax <- char*	rdi <- *a
 	mov rdi, 0
 
 	.recorrido:
-		mov r8b, [rbx]
+		mov r8b, [rbx+rdi]
 		mov [rax+rdi], r8b
-		inc rbx
 		inc rdi
 		cmp r8b, 0
 		jne .recorrido
+	
 	.fin:
 	add rsp, 8
 	pop rbx
@@ -103,17 +105,40 @@ strClone:		; rax <- char*	rdi <- *a
 ret
 			; uint32_t strLen(char* a)
 strLen:		; eax <- uint32_t rdi <- *a
+	push rbp
+	mov rbp, rsp
 	mov eax, 0
 	.recorrido:
-		cmp byte [rdi], 0
+		cmp byte [rdi+rax], 0
 		je .fin
 		inc eax
 		jmp .recorrido
 	.fin:
+	pop rbp
 ret
 			; int32_t strCmp(char* a, char* b)
 strCmp:		; eax <- int32_t rdi <- *a, rsi <- *b
-	
+	mov ecx, 0
+	.recorrido:
+		mov r8b, [rdi+rcx]
+		mov r9b, [rsi+rcx]
+		cmp r8b, r9b		; comparo caracteres
+		jne .distintos		; si son distintos salto
+		; hubo coincidencia de caracteres hasta este punto
+		cmp r8b, 0			; chequeo si llegue al final de los string
+		je .sonIguales
+		; aun no termine de recorrer ningun string
+		inc ecx
+		jmp .recorrido
+
+	.distintos:	; *los mov condicionales no toman operandos inmediatos*
+		cmovb eax, [uno]	
+		cmova eax, [menosUno]
+		jmp .fin
+
+	.sonIguales:
+		mov eax, 0
+	.fin:
 ret
 
 strDelete:
