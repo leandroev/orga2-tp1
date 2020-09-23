@@ -50,7 +50,7 @@ void test_list(FILE *pfile){
 void test_tree(FILE *pfile){
 	
 	tree_t* arbol = treeNew(TypeInt, TypeString, 1);
-	int intA;
+	int32_t intA;
 	intA = 24; treeInsert(arbol, &intA, "papanatas");
 	intA = 34; treeInsert(arbol, &intA, "rima");
 	intA = 24; treeInsert(arbol, &intA, "buscabullas");
@@ -78,7 +78,11 @@ void test_tree(FILE *pfile){
 }
 
 void test_document(FILE *pfile){
-    document_t* doc = docNew(6, TypeInt, 83, TypeInt, 125, TypeFloat, 12.5, TypeFloat, 1.34, TypeString, "Hola", TypeString, "Chau");
+	int32_t dataInt1 = 83;
+	int32_t dataInt2 = 125;
+	float dataFloat1 = 12.5f;
+	float dataFloat2 = 1.3f;
+    document_t* doc = docNew(6, TypeInt, &dataInt1, TypeInt, &dataInt2, TypeFloat, &dataFloat1, TypeFloat, &dataFloat2, TypeString, "Hola", TypeString, "Chau");
     document_t* doc_c= docClone(doc);
     docPrint(doc, pfile);
     docPrint(doc_c, pfile);
