@@ -13,6 +13,7 @@ section .data
 	uno: dd 1 
 	menosUno: dd -1
 	null: db 'NULL', 0
+	formatoString: db '%s',0
 
 section .text
 
@@ -156,15 +157,22 @@ strDelete:
 	call free
 	pop rbp
 ret
+				; void strPrint(char* a, FILE* pFile);
+strPrint:		;				rdi <- *a,	rsi <- *pFile
+	push rbp			; pila alineada
+	mov rbp, rsp
 
-strPrint:
-	
-	cmp byte [rdi], 0
+	mov rdx, rdi 		; rdx <- *a
+	mov rdi, rsi 		; rdi <- *pFile
+	mov rsi, formatoString ; rsi <- *formatoString
+	cmp byte [rdx], 0	; chequeo si es string ""
 	jne .termina
-    mov rdi, [null]
+    mov rdx, null		; rdx <- "NULL"
     
 	.termina:
 	call fprintf
+	
+	pop rbp
 ret
 
 ;*** Document ***
@@ -192,7 +200,7 @@ docDelete:		; 					rdi <- *a
 		mov edi, [r12+r14+offDocElemType]
 		call getDeleteFunction	; rax <- funcDelete*
 		mov rdi, [r12+r14+offDocElemData]
-		call [rax]				; llamo a funcDelete
+		call rax				; llamo a funcDelete
 		;ya borre el dato, continuo con los siguientes si los hay
 		add r14, 16		; cada elemento es de 16bytes
 		dec r13
