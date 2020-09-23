@@ -1,5 +1,13 @@
+extern getDeleteFunction
+extern fprintf
 extern malloc
 extern free 
+%define NULL 0
+;	/** Document **/
+%define offDocCount 0
+%define offDocValues 8
+%define offDocElemType 0
+%define offDocElemData 8
 
 section .data
 	uno: dd 1 
@@ -143,6 +151,10 @@ strCmp:		; eax <- int32_t rdi <- *a, rsi <- *b
 ret
 
 strDelete:
+	push rbp
+	mov rbp, rsp
+	call free
+	pop rbp
 ret
 
 strPrint:
@@ -152,14 +164,53 @@ strPrint:
     mov rdi, [null]
     
 	.termina:
-	call fprintf(rsi, [rdi])
+	call fprintf
 ret
 
 ;*** Document ***
 
 docClone:
 ret
-docDelete:
+				; void docDelete(document_t* a);
+docDelete:		; 					rdi <- *a
+	push rbp		; pila alineada
+	mov rbp, rsp
+
+	cmp dword [rdi+offDocCount], 0	; me fijo si no hay nada docElems que borrar
+	je .noBorrar
+
+	push rbx
+	push r12		; pila alineada
+	push r13
+	push r14		; pila alineada
+	mov rbx, rdi 	; rbx <- *a
+	mov r12, [rdi+offDocValues] ; r12 <- document->values
+	mov r13d, [rdi+offDocCount]	; r13 <- document->count
+	mov r14, 0					; r14 <- indexElem
+
+	.recorrido:
+		mov edi, [r12+r14+offDocElemType]
+		call getDeleteFunction	; rax <- funcDelete*
+		mov rdi, [r12+r14+offDocElemData]
+		call [rax]				; llamo a funcDelete
+		;ya borre el dato, continuo con los siguientes si los hay
+		add r14, 16		; cada elemento es de 16bytes
+		dec r13
+		cmp r13, 0
+		jne .recorrido
+	; ya no quedan datos, solo los elementos y el documento en si
+	mov rdi, [rbx+offDocValues]
+	call free	; free(values) libero memoria del arreglo
+	mov rdi, rbx
+	call free	; free(values) libero memoria del documento
+
+	.popear:
+	pop r14
+	pop r13
+	pop r12
+	pop rbx
+	.noBorrar:
+	pop rbp
 ret
 
 ;*** List ***
