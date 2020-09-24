@@ -24,16 +24,16 @@ void test_list(FILE *pfile){
    	
    	list_t* lf= listNew(TypeFloat);
    	
-   	listAdd(lf, 1);
-   	listAdd(lf, 3.56);
-   	listAdd(lf, 3.567);
-   	listAdd(lf, 8.2);
-   	listAdd(lf, 0.45);
-   	listAdd(lf, -1.34);
-   	listAdd(lf, 4.5);
-   	listAdd(lf, -3.789);
-   	listAdd(lf, 15.34);
-   	listAdd(lf, 120.23);
+   	float dataf1 = 1.0f;    listAdd(lf, &dataf1);
+   	float dataf2 = 3.56f;   listAdd(lf, &dataf2);
+   	float dataf3 = 3.567f;  listAdd(lf, &dataf3);
+   	float dataf4 = 8.2f;    listAdd(lf, &dataf4);
+   	float dataf5 = 0.45f;   listAdd(lf, &dataf5);
+   	float dataf6 = -1.34f;  listAdd(lf, &dataf6);
+   	float dataf7 = 4.5f;    listAdd(lf, &dataf7);
+   	float dataf8 = 3.789f;  listAdd(lf, &dataf8);
+   	float dataf9 = 15.34f;  listAdd(lf, &dataf9);
+   	float dataf10 = 120.23f;listAdd(lf, &dataf10);
 
     list_t* l_c= listClone(l);
     list_t* lf_c= listClone(lf);
@@ -41,33 +41,33 @@ void test_list(FILE *pfile){
     listPrint(l, pfile);
     listPrint(lf, pfile);
 
-    listDelete(l, pfile);
-    listDelete(l_c, pfile);
-    listDelete(lf, pfile);
-    listDelete(lf_c, pfile);
+    listDelete(l);
+    listDelete(l_c);
+    listDelete(lf);
+    listDelete(lf_c);
 }
 
 void test_tree(FILE *pfile){
 	
 	tree_t* arbol = treeNew(TypeInt, TypeString, 1);
-	
-	treeInsert(arbol, 24, "papanatas");
-	treeInsert(arbol, 34, "rima");
-	treeInsert(arbol, 24, "buscabullas");
-	treeInsert(arbol, 11, "musica");
-	treeInsert(arbol, 31, "Pikachu");
-	treeInsert(arbol, 11, "Bulbasaur");
-	treeInsert(arbol, -2, "Charmander");
+	int32_t intA;
+	intA = 24; treeInsert(arbol, &intA, "papanatas");
+	intA = 34; treeInsert(arbol, &intA, "rima");
+	intA = 24; treeInsert(arbol, &intA, "buscabullas");
+	intA = 11; treeInsert(arbol, &intA, "musica");
+	intA = 31; treeInsert(arbol, &intA, "Pikachu");
+	intA = 11; treeInsert(arbol, &intA, "Bulbasaur");
+	intA = -2; treeInsert(arbol, &intA, "Charmander");
 
 	tree_t* arbol_2 = treeNew(TypeInt, TypeString, 1);
 
-	treeInsert(arbol_2, -2, "Charmander");
-	treeInsert(arbol_2, 11, "Bulbasaur");
-	treeInsert(arbol_2, 31, "Pikachu");
-	treeInsert(arbol_2, 11, "musica");
-	treeInsert(arbol_2, 24, "buscabullas");
-	treeInsert(arbol_2, 34, "rima");
-	treeInsert(arbol_2, 24, "papanatas");
+	intA = -2; treeInsert(arbol_2, &intA, "Charmander");
+	intA = 11; treeInsert(arbol_2, &intA, "Bulbasaur");
+	intA = 31; treeInsert(arbol_2, &intA, "Pikachu");
+	intA = 11; treeInsert(arbol_2, &intA, "musica");
+	intA = 24; treeInsert(arbol_2, &intA, "buscabullas");
+	intA = 34; treeInsert(arbol_2, &intA, "rima");
+	intA = 24; treeInsert(arbol_2, &intA, "papanatas");
 
 	treePrint(arbol, pfile);
 	treePrint(arbol_2, pfile);
@@ -78,7 +78,12 @@ void test_tree(FILE *pfile){
 }
 
 void test_document(FILE *pfile){
-    document_t* doc = docNew(6, TypeInt, &83, TypeInt, &125, TypeFloat, &12.5, TypeFloat, &1.34, TypeString, "Hola", TypeString, "Chau");
+
+	int32_t dataInt1 = 83;
+	int32_t dataInt2 = 125;
+	float dataFloat1 = 12.5f;
+	float dataFloat2 = 1.3f;
+    document_t* doc = docNew(6, TypeInt, &dataInt1, TypeInt, &dataInt2, TypeFloat, &dataFloat1, TypeFloat, &dataFloat2, TypeString, "Hola", TypeString, "Chau");
     document_t* doc_c= docClone(doc);
     docPrint(doc, pfile);
     docPrint(doc_c, pfile);

@@ -3,3 +3,4 @@ solucion/lib_c.o
 solucion/main
 solucion/tester
 solucion/.gdb_history
+solucion/salida.caso.propios.txt
