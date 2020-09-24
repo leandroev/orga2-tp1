@@ -143,7 +143,12 @@ strCmp:		; eax <- int32_t rdi <- *a, rsi <- *b
 ret
 
 strDelete:
-ret
+	
+	push rbp
+	mov rbp, rsp
+	call free
+	pop rbp
+	ret
 
 strPrint:
 	
@@ -152,7 +157,7 @@ strPrint:
     mov rdi, [null]
     
 	.termina:
-	call fprintf(rsi, [rdi])
+	call fprintf rsi, [rdi]
 ret
 
 ;*** Document ***
