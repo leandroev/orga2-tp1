@@ -319,7 +319,7 @@ listAdd:
 	mov r15, [rbx+offListFirst]
 	.ciclo:
 		mov rdi, r12
-		mov rsi, r15
+		mov rsi, [r15+offListElemData]
 		call r13
 		cmp eax, 1
 		jl .sigo 
@@ -335,7 +335,7 @@ listAdd:
 	
 	.sigo:
 		mov r15, [r15+offListElemNext]
-		cmp r15, [rbx+offListLast]
+		cmp r15, NULL
 		je .esUltimo
 		jmp .ciclo
 
@@ -344,9 +344,11 @@ listAdd:
 		mov [rbx+offListLast], r14
 		mov qword [r14+offListElemNext], NULL
 		mov qword [r14+offListElemPrev], NULL
+		jmp .termine
 
 	.esPrimero:
 		mov [rbx+offListFirst], r14
+		jmp .termine
 	
 	.esUltimo:
 		mov r15, [rbx+offListLast]
