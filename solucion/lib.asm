@@ -1,4 +1,7 @@
+extern getCompareFunction
+extern getCloneFunction
 extern getDeleteFunction
+extern intClone
 extern fprintf
 extern malloc
 extern free 
@@ -6,8 +9,19 @@ extern free
 ;	/** Document **/
 %define offDocCount 0
 %define offDocValues 8
+%define sizeDocument 16
 %define offDocElemType 0
 %define offDocElemData 8
+%define sizeDocElem	16
+;	/** List **/
+%define offListType 0
+%define offListSize 4
+%define offListFirst 8
+%define offListLast 16
+%define offListElemData 0
+%define offListElemNext 8
+%define offListElemPrev 16
+%define sizeListElem 24
 
 section .data
 	uno: dd 1 
@@ -176,8 +190,61 @@ strPrint:		;				rdi <- *a,	rsi <- *pFile
 ret
 
 ;*** Document ***
+				; document_t* docClone(document_t* a);
+docClone:		; rax <- *document_t 	  rdi <- *a
+	push rbp			; pila alineada
+	mov rbp, rsp
+	push rbx
+	push r12 			; pila alineada
+	push r13
+	push r14 			; pila alineada
 
-docClone:
+	mov rbx, rdi 		; rbx <- *a
+	;creo un documento
+	mov rdi, sizeDocument
+	call malloc 		; rax <- *nuevoDocument
+	 
+	mov r12, rax		; r12 <- *nuevoDocument
+	mov r13d, [rbx+offDocCount]		; r8 <- a->count
+	mov [r12+offDocCount], r13 	; nuevoDocument->count = r8
+	mov qword [r12+offDocValues], NULL	; nuevoDocument->values = NULL
+	; comparo que *a tenga docElems
+	cmp r13, 0
+	je .fin
+	; pido memoria para el arreglo values
+	mov eax, sizeDocElem
+	mul r13d
+	mov rdi, rax 				; rdi <- 16*cantidad de elementos)		
+	call malloc
+	; copio los docElems
+	mov r14, rax				; r14 <- nuevoDocument->values
+	mov [r12+offDocValues], r14	; nuevoDocument->values = r14
+	mov rbx, [rbx+offDocValues] ; rbx <- a->values
+	.ciclo:
+		mov edi, [rbx+offDocElemType]	; rdi <- type_t
+		; obtengo la funcion clonar
+		mov [r14+offDocElemType], edi 	; r14->type = rdi
+		call getCloneFunction			; rax <- funcClone
+		; clono el dato
+		mov rdi, [rbx+offDocElemData] 	; rdi <- *dato a clonar
+		call rax						; rax <- *datoClon
+		mov [r14+offDocElemData], rax 	; r14->data = rax
+		; avanzo en la estructura docElems
+		add r14, sizeDocElem 			; avanzo al siguiente docElems
+		add rbx, sizeDocElem
+		dec r13
+		cmp r13, 0						; si r13 = 0 termine
+		jne .ciclo
+
+	.fin:
+	; retorno el puntero al nuevoDocument
+	mov rax, r12
+
+	pop r14
+	pop r13
+	pop r12
+	pop rbx
+	pop rbp
 ret
 				; void docDelete(document_t* a);
 docDelete:		; 					rdi <- *a
@@ -222,8 +289,80 @@ docDelete:		; 					rdi <- *a
 ret
 
 ;*** List ***
-
+				; 	void listAdd(list_t* l, void* data);
+				;				 rdi <- *l 	rsi <- *data
 listAdd:
+	push rbp
+	mov rbp, rsp
+	push rbx
+	push r12
+	push r13
+	push r14
+	push r15
+	sub rsp, 8
+
+	mov rbx, rdi
+	mov r12, rsi
+	mov r13d, [rbx+offListType]
+	mov rdi, r13
+	call getCompareFunction
+	mov r13, rax	; r13 <- funcCompare
+	
+	mov rdi, sizeListElem
+	call malloc
+	mov r14, rax
+
+	cmp qword [rbx+offListSize], 0
+	je .vacia
+	mov r15, [rbx+offListFirst]
+	.ciclo:
+		mov rdi, r12
+		mov rsi, r15
+		call r13
+		cmp eax, 1
+		jl .sigo 
+		
+		mov [r14+offListElemNext], r15
+		mov r8, [r15+offListElemPrev]
+		mov [r14+offListElemPrev], r8
+		mov [r15+offListElemPrev], r14
+		cmp r8, NULL
+		je .esPrimero
+		mov [r8+offListElemNext], r14
+		jmp .termine
+	
+	.sigo:
+		mov r15, [r15+offListElemNext]
+		cmp r15, [rbx+offListLast]
+		je .esUltimo
+		jmp .ciclo
+
+	.vacia:
+		mov [rbx+offListFirst], r14
+		mov [rbx+offListLast], r14
+		mov qword [r14+offListElemNext], NULL
+		mov qword [r14+offListElemPrev], NULL
+
+	.esPrimero:
+		mov [rbx+offListFirst], r14
+	
+	.esUltimo:
+		mov r15, [rbx+offListLast]
+		mov [r15+offListElemNext], r14
+		mov [r14+offListElemPrev], r15
+		mov [rbx+offListLast], r14
+
+	.termine:
+		mov [r14+offListElemData], r12
+		inc dword [rbx+offListSize]	
+
+	add rsp, 8
+	pop r15
+	pop r14
+	pop r13
+	pop r12
+	pop rbx
+	pop rbp
 ret
 
 ;*** Tree ***
