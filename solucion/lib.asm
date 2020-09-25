@@ -184,9 +184,11 @@ strPrint:		;				rdi <- *a,	rsi <- *pFile
     mov rdx, null		; rdx <- "NULL"
     
 	.termina:
+
 	call fprintf
 	
 	pop rbp
+
 ret
 
 ;*** Document ***

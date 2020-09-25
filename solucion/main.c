@@ -78,6 +78,7 @@ void test_tree(FILE *pfile){
 }
 
 void test_document(FILE *pfile){
+
 	int32_t dataInt1 = 83;
 	int32_t dataInt2 = 125;
 	float dataFloat1 = 12.5f;
