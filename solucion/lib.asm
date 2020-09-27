@@ -314,7 +314,7 @@ listAdd:
 	call malloc
 	mov r14, rax
 
-	cmp qword [rbx+offListSize], 0
+	cmp dword [rbx+offListSize], 0
 	je .vacia
 	mov r15, [rbx+offListFirst]
 	.ciclo:
@@ -354,6 +354,7 @@ listAdd:
 		mov r15, [rbx+offListLast]
 		mov [r15+offListElemNext], r14
 		mov [r14+offListElemPrev], r15
+		mov qword [r14+offListElemNext], NULL
 		mov [rbx+offListLast], r14
 
 	.termine:

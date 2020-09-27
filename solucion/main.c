@@ -11,29 +11,29 @@ void test_list(FILE *pfile){
     
     list_t* l= listNew(TypeString);
    	
-   	listAdd(l, "a");
-   	listAdd(l, "b");
-   	listAdd(l, "c");
-   	listAdd(l, "d");
-   	listAdd(l, "e");
-   	listAdd(l, "f");
-   	listAdd(l, "g");
-   	listAdd(l, "h");
-   	listAdd(l, "i");
-   	listAdd(l, "j");
+   	listAdd(l, strClone("a"));
+   	listAdd(l, strClone("d"));
+   	listAdd(l, strClone("e"));
+   	listAdd(l, strClone("b"));
+   	listAdd(l, strClone("c"));
+   	listAdd(l, strClone("j"));
+   	listAdd(l, strClone("h"));
+   	listAdd(l, strClone("f"));
+   	listAdd(l, strClone("g"));
+   	listAdd(l, strClone("i"));
    	
    	list_t* lf= listNew(TypeFloat);
    	
-   	float dataf1 = 1.0f;    listAdd(lf, &dataf1);
-   	float dataf2 = 3.56f;   listAdd(lf, &dataf2);
-   	float dataf3 = 3.567f;  listAdd(lf, &dataf3);
-   	float dataf4 = 8.2f;    listAdd(lf, &dataf4);
-   	float dataf5 = 0.45f;   listAdd(lf, &dataf5);
-   	float dataf6 = -1.34f;  listAdd(lf, &dataf6);
-   	float dataf7 = 4.5f;    listAdd(lf, &dataf7);
-   	float dataf8 = 3.789f;  listAdd(lf, &dataf8);
-   	float dataf9 = 15.34f;  listAdd(lf, &dataf9);
-   	float dataf10 = 120.23f;listAdd(lf, &dataf10);
+   	float dataf1 = 1.0f;    listAdd(lf, floatClone(&dataf1));
+   	float dataf2 = 3.56f;   listAdd(lf, floatClone(&dataf2));
+   	float dataf3 = 3.567f;  listAdd(lf, floatClone(&dataf3));
+   	float dataf4 = 8.2f;    listAdd(lf, floatClone(&dataf4));
+   	float dataf5 = 0.45f;   listAdd(lf, floatClone(&dataf5));
+   	float dataf6 = -1.34f;  listAdd(lf, floatClone(&dataf6));
+   	float dataf7 = 4.5f;    listAdd(lf, floatClone(&dataf7));
+   	float dataf8 = 3.789f;  listAdd(lf, floatClone(&dataf8));
+   	float dataf9 = 15.34f;  listAdd(lf, floatClone(&dataf9));
+   	float dataf10 = 120.23f;listAdd(lf, floatClone(&dataf10));
 
     list_t* l_c= listClone(l);
     list_t* lf_c= listClone(lf);
