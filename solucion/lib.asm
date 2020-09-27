@@ -65,11 +65,11 @@ floatCmp:		; eax <- int32_t  (rdi <- *a, rsi <- *b)
 		jmp .fin 
 
 	.esMayor:
-		mov eax, 1
+		mov eax, -1
 		jmp .fin 
 	
 	.esMenor:
-		mov eax, -1		; o es add rax, -1
+		mov eax, 1		; o es add rax, -1
 	
 	.fin:
 	ret
