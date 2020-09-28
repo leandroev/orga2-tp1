@@ -397,7 +397,7 @@ treeInsert:
 	mov rbx, rdi;		rbx <- arbol
 	mov r12, rsi;		r12 <- llave
 	mov r13, rdx;		r13 <- data
-	mov rdi, [rbx+offTreeTypeKey]
+	mov edi, [rbx+offTreeTypeKey]
 	call getCompareFunction
 	mov r15, rax;		r15 <- funcion Comparacion
 
@@ -431,20 +431,20 @@ treeInsert:
 
 	.eshojaDerecha:
 		mov r14, r9
-		mov rdi, 24
+		mov rdi, 32
 		call malloc
 		mov [r14+offTreeNodeRight], rax
 		jmp .insertarClave
 
 	.eshojaIzquierda:
 		mov r14, r9
-		mov rdi, 24
+		mov rdi, 32
 		call malloc
 		mov [r14+offTreeNodeLeft], rax
 		jmp .insertarClave
 
 	.insertarClave:
-		mov rdi, [rbx + offTreeTypeKey]
+		mov edi, [rbx + offTreeTypeKey]
 		mov r14, rax
 		mov qword [r14 + offTreeNodeRight], NULL
 		mov qword [r14 + offTreeNodeLeft], NULL
@@ -452,15 +452,16 @@ treeInsert:
 		mov rdi, r12
 		call rax
 		mov [r14 + offTreeNodeKey], rax
-		mov rdi, [rbx + offTreeTypeData]
+		mov edi, [rbx + offTreeTypeData]
 		call listNew
+		mov [r14 + offTreeNodeValue], rax
 		mov r8, rax
 		jmp .insertar
 		
 
 	.insertar:
 		mov r15, r8
-		mov rdi, [rbx+ offTreeTypeData]
+		mov edi, [rbx+ offTreeTypeData]
 		call getCloneFunction
 		mov rdi, r13
 		call rax
@@ -472,7 +473,7 @@ treeInsert:
 		jmp .termina
 
 	.esRaiz:
-		mov rdi, 24
+		mov rdi, 32
 		call malloc
 		mov [rbx+offTreeFirst], rax
 		jmp .insertarClave
@@ -493,5 +494,6 @@ treeInsert:
 	pop rbp
 ret
 treePrint:
+
 ret
 
