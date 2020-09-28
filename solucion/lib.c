@@ -156,20 +156,30 @@ void listRemove(list_t* l, void* data){
         listElem_t *elemActual = l->first;
         uint32_t lSize = l->size;
         for (uint32_t i = 0; i < l->size; ++i){ // recorro la lista
+            
             if(fc(elemActual->data, data) == 0){ // hay coincidencia??
+                listElem_t *elemSiguiente = elemActual->next;
+               
                 if(elemActual->prev != NULL){
-                    elemActual->prev->next = elemActual->next;  // hay elemento previo
-                }else{
-                    l->first = elemActual->next;    // no hay elemento previo => actualizo l->first
+                    elemActual->prev->next = elemSiguiente;  // hay elemento previo
                 }
-                if(elemActual->next != NULL){
-                    elemActual->next->prev = elemActual->prev;  // hay elemento siguiente
+                else{
+                    l->first = elemSiguiente;    // no hay elemento previo => actualizo l->first
+                }
+
+                if(elemSiguiente != NULL){
+                    elemSiguiente->prev = elemActual->prev;  // hay elemento siguiente
                 }else{
                     l->last = elemActual->prev;     // no hay elemeto siguiente => actualizo l->last
                 }
                 fd(elemActual->data);   // borro el dato
                 free(elemActual);       // borro el elemento de lista
+                
+                elemActual = elemSiguiente;
                 lSize--;
+            }
+            else{
+                elemActual = elemActual->next;
             }
         }
         l->size = lSize;    // actualizo la longitud de la lista
@@ -257,7 +267,12 @@ void treeRemove(tree_t* tree, void* key, void* data) {
         do{
             int32_t resCmp = fc(key, actual->key);  // comparo claves
             if(resCmp == 0){        // a = b => encontre nodo
+                uint32_t sizeList = actual->values->size;
                 listRemove(actual->values, data);   // borro el dato de la lista
+                if(sizeList > actual->values->size){
+                    tree->size = tree->size - (sizeList - actual->values->size);
+                }
+                break;
             }
             else if(resCmp == 1){   // a < b => voy por rama izquierda
                 actual = actual->left;
