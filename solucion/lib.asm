@@ -7,8 +7,9 @@ extern intClone
 extern fprintf
 extern malloc
 extern free 
-%define NULL 0
 extern listNew
+
+%define NULL 0
 ;	/** Document **/
 %define offDocCount 0
 %define offDocValues 8
@@ -35,14 +36,14 @@ extern listNew
 %define offTreeNodeValue 8
 %define offTreeNodeLeft 16
 %define offTreeNodeRight 24
-
+%define sizeTreeNode 32
 section .data
 	uno: dd 1 
 	menosUno: dd -1
 	null: db 'NULL', 0
-	formatoString: db '%s',0
+	formatoString: db '%s', 0
 	abre: db '(', 0
-	flecha:db ')->' , 0
+	cierra:db ')->' , 0
 
 section .text
 
@@ -67,7 +68,7 @@ global treePrint
 ;*** Float ***
 				; int32_t floatCmp(float* a, float* b);
 floatCmp:		; eax <- int32_t  (rdi <- *a, rsi <- *b)
-	; si stackframe, no toco la pila, espero funcione
+	; no toco la pila
 	movss xmm0, [rdi] 	; segun el manual, los bits [127-32] se llenan de 0's
 	comiss xmm0, [rsi]	; comparo los floats
 	
@@ -75,28 +76,29 @@ floatCmp:		; eax <- int32_t  (rdi <- *a, rsi <- *b)
 	ja .esMayor
 	jb .esMenor
 	
-	.sonIguales: 	
+	.sonIguales: 		; a = b
 		mov eax, 0
 		jmp .fin 
 
-	.esMayor:
+	.esMayor:			; a > b
 		mov eax, -1
 		jmp .fin 
 	
-	.esMenor:
-		mov eax, 1		; o es add rax, -1
+	.esMenor:			; a < b
+		mov eax, 1		
 	
 	.fin:
 	ret
+
 				; float* floatClone(float* a);
 floatClone:		; rax <- float*    (rdi <- *a)
 	push rbp		; pila alieada
 	mov rbp, rsp
-	push rdi		; guardo rdi en la pila | pila desalineada
+	push rdi		; guardo *float en la pila | pila desalineada
 	sub rsp, 8		; pila alineada
 
 	mov rdi, 4
-	call malloc 	; pido  bytes para el float
+	call malloc 	; pido  4 bytes para el float
 
 	; recupero el puntero a float
 	add rsp,8 		
@@ -105,12 +107,10 @@ floatClone:		; rax <- float*    (rdi <- *a)
 	mov [rax], esi	; lo copio en memoria
 	pop rbp
 ret
+
 					; void floatDelete(float* a)
 floatDelete:		;				  rdi <- *a
-	push rbp
-	mov rbp, rsp
-	call free
-	pop rbp
+	jmp free
 ret
 
 ;*** String ***
@@ -125,16 +125,16 @@ strClone:		; rax <- char*	rdi <- *a
 	mov rbx, rdi	; rbx <- *a
 	call strLen 	; rax <- largo del String
 	
-	inc eax			; tengo que agregar un '0' al final
+	inc eax			; tengo que agregar un '0' al final del char*
 	mov edi, eax
 	call malloc		; rax <- char* clonString
-	mov rdi, 0
+	mov rdi, 0 		; index
 
 	.recorrido:
-		mov r8b, [rbx+rdi]
-		mov [rax+rdi], r8b
-		inc rdi
-		cmp r8b, 0
+		mov r8b, [rbx+rdi] 	; obtengo el char
+		mov [rax+rdi], r8b 	; copio el char a memoria
+		inc rdi 		
+		cmp r8b, 0 			; si es 0 termine
 		jne .recorrido
 	
 	.fin:
@@ -142,25 +142,24 @@ strClone:		; rax <- char*	rdi <- *a
 	pop rbx
 	pop rbp
 ret
+
 			; uint32_t strLen(char* a)
 strLen:		; eax <- uint32_t rdi <- *a
-	push rbp
-	mov rbp, rsp
 	mov eax, 0
 	.recorrido:
 		cmp byte [rdi+rax], 0
 		je .fin
-		inc eax
+		inc eax			; incremento length
 		jmp .recorrido
 	.fin:
-	pop rbp
 ret
+
 			; int32_t strCmp(char* a, char* b)
 strCmp:		; eax <- int32_t rdi <- *a, rsi <- *b
 	mov ecx, 0
 	.recorrido:
-		mov r8b, [rdi+rcx]
-		mov r9b, [rsi+rcx]
+		mov r8b, [rdi+rcx]	; r8 <- a[i]
+		mov r9b, [rsi+rcx]	; r9 <- b[i]
 		cmp r8b, r9b		; comparo caracteres
 		jne .distintos		; si son distintos salto
 		; hubo coincidencia de caracteres hasta este punto
@@ -181,11 +180,9 @@ strCmp:		; eax <- int32_t rdi <- *a, rsi <- *b
 ret
 
 strDelete:
-	push rbp
-	mov rbp, rsp
-	call free
-	pop rbp
+	jmp free
 ret
+
 				; void strPrint(char* a, FILE* pFile);
 strPrint:		;				rdi <- *a,	rsi <- *pFile
 	push rbp			; pila alineada
@@ -203,7 +200,6 @@ strPrint:		;				rdi <- *a,	rsi <- *pFile
 	call fprintf
 	
 	pop rbp
-
 ret
 
 ;*** Document ***
@@ -218,20 +214,20 @@ docClone:		; rax <- *document_t 	  rdi <- *a
 
 	mov rbx, rdi 		; rbx <- *a
 	;creo un documento
-	mov rdi, sizeDocument
-	call malloc 		; rax <- *nuevoDocument
+	mov rdi, sizeDocument	; rdi <- sizeof(document_t)
+	call malloc 			; rax <- *nuevoDocument
 	 
-	mov r12, rax		; r12 <- *nuevoDocument
-	mov r13d, [rbx+offDocCount]		; r8 <- a->count
-	mov [r12+offDocCount], r13 	; nuevoDocument->count = r8
+	mov r12, rax			; r12 <- *nuevoDocument
+	mov r13d, [rbx+offDocCount]	; r13 <- a->count
+	mov [r12+offDocCount], r13d	; nuevoDocument->count = r13
 	mov qword [r12+offDocValues], NULL	; nuevoDocument->values = NULL
-	; comparo que *a tenga docElems
+	; chequeo que *a tenga docElems
 	cmp r13, 0
 	je .fin
 	; pido memoria para el arreglo values
-	mov eax, sizeDocElem
-	mul r13d
-	mov rdi, rax 				; rdi <- 16*cantidad de elementos)		
+	mov eax, sizeDocElem 		; eax <- sizeof(docElem_T)
+	mul r13d 					; eax <- eax * a->count
+	mov rdi, rax 				; rdi <- (16*cantidad de elementos)		
 	call malloc
 	; copio los docElems
 	mov r14, rax				; r14 <- nuevoDocument->values
@@ -249,7 +245,7 @@ docClone:		; rax <- *document_t 	  rdi <- *a
 		; avanzo en la estructura docElems
 		add r14, sizeDocElem 			; avanzo al siguiente docElems
 		add rbx, sizeDocElem
-		dec r13
+		dec r13 						; un docElem menos que copiar
 		cmp r13, 0						; si r13 = 0 termine
 		jne .ciclo
 
@@ -263,6 +259,7 @@ docClone:		; rax <- *document_t 	  rdi <- *a
 	pop rbx
 	pop rbp
 ret
+
 				; void docDelete(document_t* a);
 docDelete:		; 					rdi <- *a
 	push rbp		; pila alineada
@@ -275,6 +272,7 @@ docDelete:		; 					rdi <- *a
 	push r12		; pila alineada
 	push r13
 	push r14		; pila alineada
+
 	mov rbx, rdi 	; rbx <- *a
 	mov r12, [rdi+offDocValues] ; r12 <- document->values
 	mov r13d, [rdi+offDocCount]	; r13 <- document->count
@@ -290,7 +288,8 @@ docDelete:		; 					rdi <- *a
 		dec r13
 		cmp r13, 0
 		jne .recorrido
-	; ya no quedan datos, solo los elementos y el documento en si
+
+	; ya no quedan datos, solo el arreglo de elementos y el documento en si
 	mov rdi, [rbx+offDocValues]
 	call free	; free(values) libero memoria del arreglo
 	mov rdi, rbx
@@ -307,65 +306,65 @@ ret
 
 ;*** List ***
 				; 	void listAdd(list_t* l, void* data);
-				;				 rdi <- *l 	rsi <- *data
-listAdd:
-	push rbp
+listAdd:		;				 rdi <- *l, rsi <- *data
+	push rbp				; pila alineada
 	mov rbp, rsp
 	push rbx
-	push r12
+	push r12				; pila alineada
 	push r13
-	push r14
+	push r14 				; pila alineada
 	push r15
-	sub rsp, 8
+	sub rsp, 8 				; pila alineada
 
-	mov rbx, rdi
-	mov r12, rsi
-	mov r13d, [rbx+offListType]
+	mov rbx, rdi 			; rbx <- *l
+	mov r12, rsi 			; r12 <- *data
+	mov r13d, [rbx+offListType] ; r13 <- l->type
 	mov rdi, r13
 	call getCompareFunction
-	mov r13, rax	; r13 <- funcCompare
+	mov r13, rax				; r13 <- funcCompare
 	
-	mov rdi, sizeListElem
+	mov rdi, sizeListElem 		; rdi <- sizeof(listElem_t)
 	call malloc
-	mov r14, rax
+	mov r14, rax 				; r14 <- *nuevoListElem
 
 	cmp dword [rbx+offListSize], 0
-	je .vacia
-	mov r15, [rbx+offListFirst]
+	je .vacia 					; chequeo si hay elementos
+	mov r15, [rbx+offListFirst] ; r15 <- l->first
 	.ciclo:
-		mov rdi, r12
+		mov rdi, r12 			
 		mov rsi, [r15+offListElemData]
-		call r13
-		cmp eax, 1
-		jl .sigo 
-		
+		call r13 				; comparo el nuevoDato con los de la lista (cmp(a,b))
+		cmp eax, 1 				
+		jl .sigo  				; si obtengo a >= b sigo comparando
+		; encontré donde ubicar el listElem
 		mov [r14+offListElemNext], r15
 		mov r8, [r15+offListElemPrev]
 		mov [r14+offListElemPrev], r8
 		mov [r15+offListElemPrev], r14
-		cmp r8, NULL
+		cmp r8, NULL 			; chequeo si el dato es el nuevo l->first
 		je .esPrimero
 		mov [r8+offListElemNext], r14
 		jmp .termine
 	
 	.sigo:
+		; avanzo al siguiente de la lista
 		mov r15, [r15+offListElemNext]
-		cmp r15, NULL
+		cmp r15, NULL 	; chequeo si ya no quedan elementos
 		je .esUltimo
 		jmp .ciclo
 
-	.vacia:
+	.vacia: 		; caso agregar primer elemento
 		mov [rbx+offListFirst], r14
 		mov [rbx+offListLast], r14
 		mov qword [r14+offListElemNext], NULL
 		mov qword [r14+offListElemPrev], NULL
 		jmp .termine
 
-	.esPrimero:
+	.esPrimero: 	; es primer elemento pero no el unico
 		mov [rbx+offListFirst], r14
 		jmp .termine
 	
-	.esUltimo:
+	.esUltimo:		; es el ultimo elemento de la lista
 		mov r15, [rbx+offListLast]
 		mov [r15+offListElemNext], r14
 		mov [r14+offListElemPrev], r15
@@ -373,8 +372,8 @@ listAdd:
 		mov [rbx+offListLast], r14
 
 	.termine:
-		mov [r14+offListElemData], r12
-		inc dword [rbx+offListSize]	
+		mov [r14+offListElemData], r12 	; agrego el dato al listElem
+		inc dword [rbx+offListSize]		; incremento el campo size de lista
 
 	add rsp, 8
 	pop r15
@@ -386,106 +385,113 @@ listAdd:
 ret
 
 ;*** Tree ***
-
-treeInsert:
-	push rbp			; int treeInsert(tree* t,  void* key,  void* data)
-						; eax<-result    rdi <- *t  rsi <- *key  rdx <- *data
+					; int treeInsert(tree* t,  void* key,  void* data)
+treeInsert:			; eax<-result    rdi <- *t  rsi <- *key  rdx <- *data
+	push rbp			; pila alineada
 	mov rbp, rsp
 	push rbx
-	push r12
+	push r12			; pila alineada
 	push r13
-	push r14
+	push r14 			; pila alineada
 	push r15
-	sub rsp, 8
+	sub rsp, 8 			; pila alineada
 
-	mov rbx, rdi;		rbx <- arbol
-	mov r12, rsi;		r12 <- llave
-	mov r13, rdx;		r13 <- data
-	mov edi, [rbx+offTreeTypeKey]
-	call getCompareFunction
-	mov r15, rax;		r15 <- funcion Comparacion
+	mov rbx, rdi;		rbx <- *tree
+	mov r12, rsi;		r12 <- *key
+	mov r13, rdx;		r13 <- *data
+	
+	mov edi, [rbx+offTreeTypeKey]	; rdi <- tree->typeKey
+	call getCompareFunction 	 	
+	mov r15, rax					; r15 <- funcion Comparacion
 
-
-	mov r14, [rbx + offTreeFirst];	r14 <- nodo para recorrer
-	cmp r14, NULL
-	je .esRaiz
+	mov r14, [rbx + offTreeFirst]	; r14 <- *treeNode para recorrido
+	cmp r14, NULL 					
+	je .esRaiz 			; caso agregar raiz
+	; caso ya existe raiz
 	.ciclo:
-		mov rdi, [r14+offTreeNodeKey]
-		mov rsi, r12
-		call r15
-		cmp eax, 0
-		jg .derecha
-		jl .izquierda
-		mov r8, [r14 + offTreeNodeValue]
-		cmp dword [r8 + offListSize], 1
-		jne .insertar
-		je .duplicados
-	.derecha:
-		mov r9, r14
-		mov r14, [r14+ offTreeNodeRight]
-		cmp r14, NULL
-		je .eshojaDerecha
+		mov rdi, [r14+offTreeNodeKey]	; rdi <- treeNode->key
+		mov rsi, r12 					; rsi <- *key
+		call r15 			; comparo las keys (rdi,rsi)
+		cmp eax, 0 
+		jg .derecha 		; rdi < rsi
+		jl .izquierda 		; rdi > rsi
+		; caso rdi = rsi
+		mov r8, [r14 + offTreeNodeValue]	; r8 <- treeNode->values
+		cmp dword [r8 + offListSize], 1		; chequeo si la lista tiene elementos
+		jne .insertar 		; caso lista vacia || caso lista acepta duplicados
+		je .duplicados 		; chequeo si acepta o no duplicados
+
+	.derecha:	; rama derecha
+		mov r9, r14 		; r9 <- treeNode
+		mov r14, [r14+ offTreeNodeRight] 
+		cmp r14, NULL 		; chequeo si existe nodo derecho
+		je .nuevaHojaDerecha
 		jmp .ciclo
-	.izquierda:
-		mov r9, r14
+	
+	.izquierda:	; rama izquierda
+		mov r9, r14 		; r9 <- treeNode
 		mov r14, [r14+ offTreeNodeLeft]
-		cmp r14, NULL
-		je .eshojaIzquierda
+		cmp r14, NULL 		; chequeo si existe nodo izquierdo
+		je .nuevaHojaIzquierda
 		jmp .ciclo
 
-	.eshojaDerecha:
-		mov r14, r9
-		mov rdi, 32
+	.nuevaHojaDerecha:
+		mov r14, r9 		; r14 <- treeNode
+		mov rdi, sizeTreeNode
 		call malloc
 		mov [r14+offTreeNodeRight], rax
 		jmp .insertarClave
 
-	.eshojaIzquierda:
-		mov r14, r9
-		mov rdi, 32
+	.nuevaHojaIzquierda:
+		mov r14, r9 		; r14 <- treeNode
+		mov rdi, sizeTreeNode
 		call malloc
 		mov [r14+offTreeNodeLeft], rax
 		jmp .insertarClave
 
 	.insertarClave:
-		mov edi, [rbx + offTreeTypeKey]
-		mov r14, rax
+	; caso en el que no existe la clave
+		mov r14, rax 				; r14 <- *nuevoTreeNode
 		mov qword [r14 + offTreeNodeRight], NULL
 		mov qword [r14 + offTreeNodeLeft], NULL
-		call getCloneFunction
-		mov rdi, r12
-		call rax
-		mov [r14 + offTreeNodeKey], rax
-		mov edi, [rbx + offTreeTypeData]
-		call listNew
-		mov [r14 + offTreeNodeValue], rax
-		mov r8, rax
+		
+		mov edi, [rbx + offTreeTypeKey]	; rdi <- tree->typeKey
+		call getCloneFunction  			; rax <- funcion clonar (tree->typeKey)
+		mov rdi, r12 					; rdi <- *key
+		call rax 
+		mov [r14 + offTreeNodeKey], rax ; *nuevoTreeNode->key = rax
+		
+		mov edi, [rbx + offTreeTypeData]; rdi <- tree->typeData
+		call listNew 					; creo lista de typeData
+		mov [r14 + offTreeNodeValue], rax	; *nuevoTreeNode->values = rax
+		mov r8, rax							; r8 <- treeNode->values
 		jmp .insertar
 		
 
 	.insertar:
-		mov r15, r8
-		mov edi, [rbx+ offTreeTypeData]
-		call getCloneFunction
-		mov rdi, r13
-		call rax
-		mov rdi, r15
-		mov rsi, rax
-		call listAdd
-		inc dword [rbx + offTreeSize]
-		mov eax, 1
+		mov r15, r8 			; r15 <- treeNode->values
+		mov edi, [rbx+ offTreeTypeData] ; rdi <- tree->typeData
+		call getCloneFunction 			; rax <- funcion clonar (tree->typeKey)
+		mov rdi, r13  					; rdi <- *data
+		call rax  						; call funcClone(*data)
+		mov rdi, r15 					; rdi <- treeNode->values
+		mov rsi, rax 					; rsi <- *clonData
+		call listAdd 					; listAdd(clonData)
+		inc dword [rbx + offTreeSize] 	; incremento size tree
+		mov eax, 1 						; se inserto dato => eax = 1
 		jmp .termina
 
 	.esRaiz:
-		mov rdi, 32
+		mov rdi, sizeTreeNode 			; creo nuevo nodo raiz
 		call malloc
-		mov [rbx+offTreeFirst], rax
-		jmp .insertarClave
+		mov [rbx+offTreeFirst], rax 	; apunto al nodo como raiz del arbol
+		jmp .insertarClave 				; agrego la clave
 
-	.duplicados:
-		cmp dword [rbx+offTreeDup], 0
-		jne .insertar
-		mov eax, 0
+	.duplicados: 				
+		cmp dword [rbx+offTreeDup], 0 	
+		jne .insertar 		; caso acepta duplicados
+		; caso no acepta duplicados
+		mov eax, 0 			; no se inserto dato => eax = 1
 		jmp .termina
 
 	.termina:
@@ -498,26 +504,24 @@ treeInsert:
 	pop rbp
 ret
 
-
-treePrint:		;void treePrint(tree_t* tree, FILE* pfile)
-	push rbp				  ; rdi <- *tree  rsi <- *pfile
+			;void treePrint(tree_t* tree, FILE* pfile)
+treePrint:	; 				rdi <- *tree, rsi <- *pfile	
+	push rbp		; pila alineada
 	mov rbp, rsp
-	push r12	; arbol
-	push r13	; printFuncKey
-	push r14	; pFile
-	sub rsp, 8
+	push r12	 	
+	push r13 		; pila alineada
+	push r14 		
+	sub rsp, 8 		; pila alineada
 	
-	mov r14, rsi
-	mov r12, rdi
+	mov r12, rdi 		; r12 <- *tree
+	mov r14, rsi 		; r14 <- *pFile	
 	mov edi, [r12+offTreeTypeKey]
 	call getPrintFunction
-	mov r13, rax
+	mov r13, rax 		; r13 <- printFuncKey
 
-	mov rdi, [r12+offTreeFirst]
-	mov rsi, r14
+	mov rdi, [r12+offTreeFirst] ; rdi <- tree->first
 	call treePrintAux
-
-;	treePrintAux(tree.first, pFile)
+	
 	add rsp, 8
 	pop r14
  	pop r13
@@ -526,52 +530,42 @@ treePrint:		;void treePrint(tree_t* tree, FILE* pfile)
 ret
 
 
-
 treePrintAux:
-	push rbp
+; r14 <- *pFile	 r13 <- printFuncKey rdi <- *treeNode 
+	push rbp 		; pila alineada
 	mov rbp, rsp
 	push r15
-	push rbx
+	sub rsp, 8 		; pila alineada
 
-
-	mov rbx, rsi	; pFile
-	mov r15, rdi	; nodo
+	mov r15, rdi	; *treeNode
 	cmp r15, NULL
-	je .termina
+	je .termina 	; si no hay nodo termina
 
-	mov rdi, [r15+offTreeNodeLeft]
-	call treePrintAux
+	mov rdi, [r15+offTreeNodeLeft]	; rdi <- nodoIzquierdo
+	call treePrintAux 				; llamada recursiva
 
+	mov rdi, r14 	; rdi <- *pFile
+	mov rsi, abre 	
+	call fprintf	; print "("
 
-	mov rdi, rbx
-	mov rsi, abre
-	call fprintf
+	mov rsi, r14 	; rsi <- *pFile
+	mov rdi, [r15+offTreeNodeKey] 	; rdi <- treeNode->key
+	call r13 		; llamo a printFuncKey
 
-	mov rsi, rbx
-	mov rdi, [r15+offTreeNodeKey]
-	call r13
+	mov rdi, r14 	; rdi <- *pFile
+	mov rsi, cierra 
+	call fprintf 	; print ")->"
 
-	mov rdi, rbx
-	mov rsi, flecha
-	call fprintf
+	mov rdi, [r15+offTreeNodeValue]	; rdi <- treeNode->values
+	mov rsi, r14 	; rsi <- *pFile
+	call listPrint 	; print lista
 
-	mov rdi, [r15+offTreeNodeValue]
-	mov rsi, rbx
-	call listPrint
+	mov rdi, [r15+offTreeNodeRight]	; rdi <- nodoDerecho
+	mov rsi, r14 	; rsi <- *pFile
+	call treePrintAux				; llamada recursiva
 
-	mov rdi, [r15+offTreeNodeRight]
-	mov rsi, rbx
-	call treePrintAux
-
-
-;si nodo==NULL -> termina
-
-;treePrintAux(treeNode.left)
-;print(treeNode)
-;treePrintAux(treeNode.right)
-;
 .termina:
-	pop rbx
+	add rsp, 8
 	pop r15
 	pop rbp
 ret

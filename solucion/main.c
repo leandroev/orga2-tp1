@@ -26,14 +26,9 @@ void test_list(FILE *pfile){
    	
    	float dataf1 = 1.0f;    listAdd(lf, floatClone(&dataf1));
    	float dataf2 = 3.56f;   listAdd(lf, floatClone(&dataf2));
-   	float dataf3 = 3.567f;  listAdd(lf, floatClone(&dataf3));
+   	float dataf3 = -1.34f;  listAdd(lf, floatClone(&dataf3));
    	float dataf4 = 8.2f;    listAdd(lf, floatClone(&dataf4));
    	float dataf5 = 0.45f;   listAdd(lf, floatClone(&dataf5));
-   	float dataf6 = -1.34f;  listAdd(lf, floatClone(&dataf6));
-   	float dataf7 = 4.5f;    listAdd(lf, floatClone(&dataf7));
-   	float dataf8 = 3.789f;  listAdd(lf, floatClone(&dataf8));
-   	float dataf9 = 15.34f;  listAdd(lf, floatClone(&dataf9));
-   	float dataf10 = 120.23f;listAdd(lf, floatClone(&dataf10));
 
     list_t* l_c= listClone(l);
     list_t* lf_c= listClone(lf);
@@ -81,14 +76,19 @@ void test_document(FILE *pfile){
 
 	int32_t dataInt1 = 83;
 	int32_t dataInt2 = 125;
-	float dataFloat1 = 12.5f;
-	float dataFloat2 = 1.3f;
-    document_t* doc = docNew(6, TypeInt, &dataInt1, TypeInt, &dataInt2, TypeFloat, &dataFloat1, TypeFloat, &dataFloat2, TypeString, "Hola", TypeString, "Chau");
-    document_t* doc_c= docClone(doc);
-    docPrint(doc, pfile);
-    docPrint(doc_c, pfile);
-    docDelete(doc);
-    docDelete(doc_c);
+	
+  float dataFloat1 = 12.5f;
+  float dataFloat2 = 1.3f;
+  
+  document_t* doc = docNew(6, TypeInt, &dataInt1, TypeInt, &dataInt2, TypeFloat, &dataFloat1, TypeFloat, &dataFloat2, TypeString, "Hola", TypeString, "Chau");
+  
+  document_t* doc_c= docClone(doc);
+  
+  docPrint(doc, pfile);
+  docPrint(doc_c, pfile);
+  
+  docDelete(doc);
+  docDelete(doc_c);
 
 }
 

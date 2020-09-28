@@ -153,13 +153,15 @@ void listRemove(list_t* l, void* data){
     if(l->size != 0){// si esta vacia no hago nada
         funcCmp_t *fc = getCompareFunction(l->type); // obtengo el putero a funcion comparacion del tipo
         funcDelete_t *fd = getDeleteFunction(l->type); // obtengo el putero a funcion borrar del tipo
-        listElem_t *elemActual = l->first;
+        
+        listElem_t *elemActual = l->first; // elemento actual
+        
         uint32_t lSize = l->size;
         for (uint32_t i = 0; i < l->size; ++i){ // recorro la lista
-            
+
             if(fc(elemActual->data, data) == 0){ // hay coincidencia??
                 listElem_t *elemSiguiente = elemActual->next;
-               
+
                 if(elemActual->prev != NULL){
                     elemActual->prev->next = elemSiguiente;  // hay elemento previo
                 }
@@ -175,11 +177,11 @@ void listRemove(list_t* l, void* data){
                 fd(elemActual->data);   // borro el dato
                 free(elemActual);       // borro el elemento de lista
                 
-                elemActual = elemSiguiente;
+                elemActual = elemSiguiente; // avanzo el actual
                 lSize--;
             }
             else{
-                elemActual = elemActual->next;
+                elemActual = elemActual->next; // avanzo el actual
             }
         }
         l->size = lSize;    // actualizo la longitud de la lista
@@ -263,14 +265,14 @@ list_t* treeGet(tree_t* tree, void* key) {
 void treeRemove(tree_t* tree, void* key, void* data) {
     if(tree->size > 0){
         funcCmp_t *fc = getCompareFunction(tree->typeKey);  // obtengo puntero a funcion para comparar claves
-        treeNode_t *actual = tree->first;
+        treeNode_t *actual = tree->first;  // actual es el primer nodo
         do{
             int32_t resCmp = fc(key, actual->key);  // comparo claves
             if(resCmp == 0){        // a = b => encontre nodo
-                uint32_t sizeList = actual->values->size;
+                uint32_t sizeList = actual->values->size;   // size lista previo
                 listRemove(actual->values, data);   // borro el dato de la lista
                 if(sizeList > actual->values->size){
-                    tree->size = tree->size - (sizeList - actual->values->size);
+                    tree->size = tree->size - (sizeList - actual->values->size); // actualizo el size de tree
                 }
                 break;
             }
