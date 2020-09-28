@@ -6,6 +6,7 @@ extern fprintf
 extern malloc
 extern free 
 %define NULL 0
+extern listNew
 ;	/** Document **/
 %define offDocCount 0
 %define offDocValues 8
@@ -22,6 +23,16 @@ extern free
 %define offListElemNext 8
 %define offListElemPrev 16
 %define sizeListElem 24
+;   /** Tree **/
+%define offTreeFirst 0
+%define offTreeSize 8
+%define offTreeTypeKey 12
+%define offTreeDup 16
+%define offTreeTypeData 20
+%define offTreeNodeKey 0
+%define offTreeNodeValue 8
+%define offTreeNodeLeft 16
+%define offTreeNodeRight 24
 
 section .data
 	uno: dd 1 
@@ -373,6 +384,113 @@ ret
 ;*** Tree ***
 
 treeInsert:
+	push rbp			; int treeInsert(tree* t,  void* key,  void* data)
+						; eax<-result    rdi <- *t  rsi <- *key  rdx <- *data
+	mov rbp, rsp
+	push rbx
+	push r12
+	push r13
+	push r14
+	push r15
+	sub rsp, 8
+
+	mov rbx, rdi;		rbx <- arbol
+	mov r12, rsi;		r12 <- llave
+	mov r13, rdx;		r13 <- data
+	mov rdi, [rbx+offTreeTypeKey]
+	call getCompareFunction
+	mov r15, rax;		r15 <- funcion Comparacion
+
+
+	mov r14, [rbx + offTreeFirst];	r14 <- nodo para recorrer
+	cmp r14, NULL
+	je .esRaiz
+	.ciclo:
+		mov rdi, [r14+offTreeNodeKey]
+		mov rsi, r12
+		call r15
+		cmp eax, 0
+		jg .derecha
+		jl .izquierda
+		mov r8, [r14 + offTreeNodeValue]
+		cmp dword [r8 + offListSize], 1
+		jne .insertar
+		je .duplicados
+	.derecha:
+		mov r9, r14
+		mov r14, [r14+ offTreeNodeRight]
+		cmp r14, NULL
+		je .eshojaDerecha
+		jmp .ciclo
+	.izquierda:
+		mov r9, r14
+		mov r14, [r14+ offTreeNodeLeft]
+		cmp r14, NULL
+		je .eshojaIzquierda
+		jmp .ciclo
+
+	.eshojaDerecha:
+		mov r14, r9
+		mov rdi, 24
+		call malloc
+		mov [r14+offTreeNodeRight], rax
+		jmp .insertarClave
+
+	.eshojaIzquierda:
+		mov r14, r9
+		mov rdi, 24
+		call malloc
+		mov [r14+offTreeNodeLeft], rax
+		jmp .insertarClave
+
+	.insertarClave:
+		mov rdi, [rbx + offTreeTypeKey]
+		mov r14, rax
+		mov qword [r14 + offTreeNodeRight], NULL
+		mov qword [r14 + offTreeNodeLeft], NULL
+		call getCloneFunction
+		mov rdi, r12
+		call rax
+		mov [r14 + offTreeNodeKey], rax
+		mov rdi, [rbx + offTreeTypeData]
+		call listNew
+		mov r8, rax
+		jmp .insertar
+		
+
+	.insertar:
+		mov r15, r8
+		mov rdi, [rbx+ offTreeTypeData]
+		call getCloneFunction
+		mov rdi, r13
+		call rax
+		mov rdi, r15
+		mov rsi, rax
+		call listAdd
+		inc dword [rbx + offTreeSize]
+		mov eax, 1
+		jmp .termina
+
+	.esRaiz:
+		mov rdi, 24
+		call malloc
+		mov [rbx+offTreeFirst], rax
+		jmp .insertarClave
+
+	.duplicados:
+		cmp dword [rbx+offTreeDup], 0
+		jne .insertar
+		mov eax, 0
+		jmp .termina
+
+	.termina:
+	add rsp, 8
+	pop r15
+	pop r14
+	pop r13
+	pop r12
+	pop rbx
+	pop rbp
 ret
 treePrint:
 ret
