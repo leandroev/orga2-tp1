@@ -1,6 +1,8 @@
 extern getCompareFunction
 extern getCloneFunction
 extern getDeleteFunction
+extern getPrintFunction
+extern listPrint
 extern intClone
 extern fprintf
 extern malloc
@@ -39,6 +41,8 @@ section .data
 	menosUno: dd -1
 	null: db 'NULL', 0
 	formatoString: db '%s',0
+	abre: db '(', 0
+	flecha:db ')->' , 0
 
 section .text
 
@@ -493,7 +497,81 @@ treeInsert:
 	pop rbx
 	pop rbp
 ret
-treePrint:
 
+
+treePrint:		;void treePrint(tree_t* tree, FILE* pfile)
+	push rbp				  ; rdi <- *tree  rsi <- *pfile
+	mov rbp, rsp
+	push r12	; arbol
+	push r13	; printFuncKey
+	push r14	; pFile
+	sub rsp, 8
+	
+	mov r14, rsi
+	mov r12, rdi
+	mov edi, [r12+offTreeTypeKey]
+	call getPrintFunction
+	mov r13, rax
+
+	mov rdi, [r12+offTreeFirst]
+	mov rsi, r14
+	call treePrintAux
+
+;	treePrintAux(tree.first, pFile)
+	add rsp, 8
+	pop r14
+ 	pop r13
+	pop r12
+	pop rbp
 ret
 
+
+
+treePrintAux:
+	push rbp
+	mov rbp, rsp
+	push r15
+	push rbx
+
+
+	mov rbx, rsi	; pFile
+	mov r15, rdi	; nodo
+	cmp r15, NULL
+	je .termina
+
+	mov rdi, [r15+offTreeNodeLeft]
+	call treePrintAux
+
+
+	mov rdi, rbx
+	mov rsi, abre
+	call fprintf
+
+	mov rsi, rbx
+	mov rdi, [r15+offTreeNodeKey]
+	call r13
+
+	mov rdi, rbx
+	mov rsi, flecha
+	call fprintf
+
+	mov rdi, [r15+offTreeNodeValue]
+	mov rsi, rbx
+	call listPrint
+
+	mov rdi, [r15+offTreeNodeRight]
+	mov rsi, rbx
+	call treePrintAux
+
+
+;si nodo==NULL -> termina
+
+;treePrintAux(treeNode.left)
+;print(treeNode)
+;treePrintAux(treeNode.right)
+;
+.termina:
+	pop rbx
+	pop r15
+	pop rbp
+ret
