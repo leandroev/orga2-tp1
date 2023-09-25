@@ -1,4 +1,4 @@
-# Orga2-tp1-2c
+# organización del computador II - tp1
 
 El objetivo de este TP es implementar en Assembler un conjunto de funciones sobre distintas estructuras de datos.
 Consideraremos los tipos básicos Int, Float y String, además de tres estructuras de datos más complejas
